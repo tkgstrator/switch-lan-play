@@ -2,8 +2,12 @@
 
 FROM alpine:3.8
 
-ARG NAME=openwrt-sdk-18.06.1-ramips-mt7621_gcc-7.3.0_musl.Linux-x86_64
-ARG SDK_URL=http://openwrt.proxy.ustclug.org/releases/18.06.1/targets/ramips/mt7621/${NAME}.tar.xz
+ARG VERSION=18.06.1
+ARG TARGET=ramips
+ARG SUBTARGET=mt7621
+ARG SUFFIX=gcc-7.3.0_musl.Linux-x86_64
+ARG NAME=openwrt-sdk-${VERSION}-${TARGET}-${SUBTARGET}_${SUFFIX}
+ARG SDK_URL=http://openwrt.proxy.ustclug.org/releases/${VERSION}/targets/${TARGET}/${SUBTARGET}/${NAME}.tar.xz
 ARG SDK_PATH=/sdk/${NAME}
 
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
