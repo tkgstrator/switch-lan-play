@@ -16,20 +16,21 @@
 #include "config.h"
 #include <uv.h>
 
-const char *ip2str(struct sockaddr_in *addr)
+const char *ip2str(struct slp_addr_in *addr)
 {
+    if (addr->sin_family != addr->sin_family) {
+        return "Error: family mismatch";
+    }
     if (addr->sin_family == AF_INET) {
-        const uint8_t *sip = (uint8_t *)&addr->sin_addr;
         static char str4[IP_STR_LEN];
-        snprintf(str4, sizeof(str4), "%d.%d.%d.%d", sip[0], sip[1], sip[2], sip[3]);
+        uv_ip4_name(&addr->u.ipv4, str4, sizeof(str4));
         return str4;
     } else if (addr->sin_family == AF_INET6) {
         static char str6[IP6_STR_LEN];
-        uv_ip6_name((struct sockaddr_in6 *)addr, str6, sizeof(str6));
+        uv_ip6_name(&addr->u.ipv6, str6, sizeof(str6));
         return str6;
-    } else {
-        return "Error: unsupported sin_family";
     }
+    return "Error: unsupported sin_family";
 }
 void *str2ip(const char *ip)
 {
@@ -244,7 +245,7 @@ done:
 #endif
 }
 
-int parse_addr(const char *str, struct sockaddr_in *addr)
+int parse_addr(const char *str, struct slp_addr_in *addr)
 {
     int len = strlen(str);
     if (len < 1 || len > 1000) {
@@ -319,13 +320,23 @@ int parse_addr(const char *str, struct sockaddr_in *addr)
         hints.ai_family = AF_INET;
     }
 
-    int ret = getaddrinfo(addr_str, NULL, &hints, &addrs);
+    int ret = getaddrinfo(addr_str, port_str, &hints, &addrs);
     if (ret != 0) {
         LLOG(LLOG_ERROR, "getaddrinfo %d %d", ret);
         return -1;
     }
 
-    memcpy(addr, addrs->ai_addr, sizeof(*addr));
+    addr->sin_family = addrs->ai_addr->sa_family;
+    if (addrs->ai_addr->sa_family == AF_INET) {
+        addr->sin_len = sizeof(addr->u.ipv4);
+        memcpy(&addr->u.ipv4, addrs->ai_addr, sizeof(addr->u.ipv4));
+    } else if (addrs->ai_addr->sa_family == AF_INET6) {
+        addr->sin_len = sizeof(addr->u.ipv6);
+        memcpy(&addr->u.ipv6, addrs->ai_addr, sizeof(addr->u.ipv6));
+    } else {
+        freeaddrinfo(addrs);
+        return -1;
+    }
 
     freeaddrinfo(addrs);
 
