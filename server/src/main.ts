@@ -1,5 +1,5 @@
-import { SLPServer } from 'udpserver'
-import { ServerMonitor } from 'monitor'
+import { SLPServer } from './udpserver'
+import { ServerMonitor } from './monitor'
 
 function main (argv: string[]) {
   let port = argv[0]
