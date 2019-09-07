@@ -1,4 +1,3 @@
-import { ServerMonitor } from './monitor'
 import { createSocket, Socket, AddressInfo } from 'dgram'
 type IPAddr = string
 const Timeout = 30 * 1000
@@ -10,6 +9,7 @@ enum ForwarderType {
   Ipv4 = 1,
   Ping = 2,
   Ipv4Frag = 3,
+  TypeV2 = 0xFF,
 }
 
 interface CacheItem {
@@ -165,15 +165,3 @@ export class SLPServer {
     clearCacheItem(this.ipCache)
   }
 }
-
-function main (argv: string[]) {
-  let port = argv[0]
-  if (port === undefined) {
-    port = '11451'
-  }
-  const portNum = parseInt(port)
-  let s = new SLPServer(portNum)
-  let monitor = new ServerMonitor(s)
-  monitor.start(portNum)
-}
-main(process.argv.slice(2))
